@@ -289,6 +289,11 @@ Always OFF if building binaries"
   set(PARQUET_ARROW_LINKAGE "shared" CACHE STRING
     "How to link Arrow libraries with libparquet.so. static|shared (default shared)")
 
+  # Gandiva related build options
+  option(ARROW_GANDIVA
+    "Build the Gandiva libraries"
+    OFF)
+
 endif()
 
 if(ARROW_BUILD_TESTS OR ARROW_BUILD_BENCHMARKS)
@@ -745,4 +750,8 @@ endif()
 
 if(ARROW_PARQUET)
   add_subdirectory(src/parquet)
+endif()
+
+if(ARROW_GANDIVA)
+  add_subdirectory(src/gandiva)
 endif()

@@ -17,7 +17,7 @@
 
 #include <mutex>
 
-#include "codegen/lru_cache.h"
+#include "gandiva/lru_cache.h"
 
 namespace gandiva {
 

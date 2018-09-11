@@ -16,7 +16,7 @@
 
 #include <gtest/gtest.h>
 #include "./epoch_time_point.h"
-#include "precompiled/types.h"
+#include "gandiva/precompiled/types.h"
 
 namespace gandiva {
 

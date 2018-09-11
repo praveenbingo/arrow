@@ -21,12 +21,29 @@ find_package(Protobuf REQUIRED)
 # Find JNI
 find_package(JNI REQUIRED)
 
-# generate the protobuf files from the proto definition.
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${CMAKE_SOURCE_DIR}/../proto/Types.proto)
+set(PROTO_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
+set(PROTO_OUTPUT_FILES "${PROTO_OUTPUT_DIR}/types.pb.cc")
+set(PROTO_OUTPUT_FILES ${PROTO_OUTPUT_FILES} "${PROTO_OUTPUT_DIR}/types.pb.h")
+
+set_source_files_properties(${PROTO_OUTPUT_FILES} PROPERTIES GENERATED TRUE)
+
+get_filename_component(ABS_GANDIVA_PROTO ${CMAKE_SOURCE_DIR}/src/gandiva/proto/Types.proto ABSOLUTE)
+
+add_custom_command(
+  OUTPUT ${PROTO_OUTPUT_FILES}
+  COMMAND ${PROTOBUF_EXECUTABLE} --proto_path ${CMAKE_SOURCE_DIR}/src/gandiva/proto --cpp_out ${PROTO_OUTPUT_DIR} ${CMAKE_SOURCE_DIR}/src/gandiva/proto/Types.proto
+  DEPENDS ${ABS_GANDIVA_PROTO}
+  COMMENT "Running PROTO compiler on Types.proto"
+  VERBATIM
+)
+
+add_custom_target(gandiva-proto ALL DEPENDS ${PROTO_OUTPUT_FILES})
+set(PROTO_SRCS "${PROTO_OUTPUT_DIR}/types.pb.cc")
+set(PROTO_HDRS "${PROTO_OUTPUT_DIR}/types.pb.h")
 
 # Create the jni header file (from the java class).
 set(JNI_HEADERS_DIR "${CMAKE_CURRENT_BINARY_DIR}/java")
-add_subdirectory(../../../java ./java)
+add_subdirectory(../../../../java/gandiva ./java/gandiva)
 
 add_library(gandiva_jni SHARED
   config_builder.cc
@@ -35,7 +52,7 @@ add_library(gandiva_jni SHARED
   jni_common.cc
   ${PROTO_SRCS}
   ${PROTO_HDRS})
-add_dependencies(gandiva_jni gandiva_java)
+add_dependencies(gandiva_jni gandiva_java gandiva-proto)
 
 # For users of gandiva_jni library (including integ tests), include-dir is :
 #   /usr/**/include dir after install,
@@ -56,6 +73,6 @@ target_include_directories(gandiva_jni
 # PROTOBUF is a private dependency i.e users of gandiva also will not have a dependency on protobuf.
 target_link_libraries(gandiva_jni
   PRIVATE
-    protobuf::libprotobuf
+    ${PROTOBUF_STATIC_LIB}
     gandiva_static
 )

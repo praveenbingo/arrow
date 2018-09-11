@@ -16,7 +16,7 @@
 #include <gtest/gtest.h>
 #include "arrow/memory_pool.h"
 #include "gandiva/tree_expr_builder.h"
-#include "integ/test_util.h"
+#include "gandiva/tests/test_util.h"
 
 namespace gandiva {
 

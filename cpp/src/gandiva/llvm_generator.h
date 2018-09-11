@@ -21,14 +21,14 @@
 #include <vector>
 
 #include <gtest/gtest_prod.h>
-#include "codegen/annotator.h"
-#include "codegen/compiled_expr.h"
-#include "codegen/dex_visitor.h"
-#include "codegen/engine.h"
-#include "codegen/function_registry.h"
-#include "codegen/llvm_types.h"
-#include "codegen/lvalue.h"
-#include "codegen/value_validity_pair.h"
+#include "gandiva/annotator.h"
+#include "gandiva/compiled_expr.h"
+#include "gandiva/dex_visitor.h"
+#include "gandiva/engine.h"
+#include "gandiva/function_registry.h"
+#include "gandiva/llvm_types.h"
+#include "gandiva/lvalue.h"
+#include "gandiva/value_validity_pair.h"
 #include "gandiva/configuration.h"
 #include "gandiva/gandiva_aliases.h"
 

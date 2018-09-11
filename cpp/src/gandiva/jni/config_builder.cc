@@ -14,8 +14,8 @@
 #include <string>
 
 #include "gandiva/configuration.h"
-#include "jni/config_holder.h"
-#include "jni/env_helper.h"
+#include "gandiva/jni/config_holder.h"
+#include "gandiva/jni/env_helper.h"
 #include "jni/org_apache_arrow_gandiva_evaluator_ConfigurationBuilder.h"
 
 using gandiva::ConfigHolder;

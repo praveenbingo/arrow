@@ -17,7 +17,7 @@
 #include "gandiva/arrow.h"
 #include "gandiva/filter.h"
 #include "gandiva/projector.h"
-#include "integ/generate_data.h"
+#include "gandiva/tests/generate_data.h"
 
 #ifndef GANDIVA_TIMED_EVALUATE_H
 #define GANDIVA_TIMED_EVALUATE_H

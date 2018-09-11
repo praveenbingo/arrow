@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "codegen/bitmap_accumulator.h"
+#include "gandiva/bitmap_accumulator.h"
 
 #include <memory>
 #include <vector>
 
 #include <gtest/gtest.h>
-#include "codegen/dex.h"
+#include "gandiva/dex.h"
 
 namespace gandiva {
 

@@ -18,12 +18,12 @@
 #include <utility>
 #include <vector>
 
-#include "codegen/bitmap_accumulator.h"
-#include "codegen/cache.h"
-#include "codegen/expr_validator.h"
-#include "codegen/filter_cache_key.h"
-#include "codegen/llvm_generator.h"
-#include "codegen/selection_vector_impl.h"
+#include "gandiva/bitmap_accumulator.h"
+#include "gandiva/cache.h"
+#include "gandiva/expr_validator.h"
+#include "gandiva/filter_cache_key.h"
+#include "gandiva/llvm_generator.h"
+#include "gandiva/selection_vector_impl.h"
 #include "gandiva/condition.h"
 #include "gandiva/status.h"
 

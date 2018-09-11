@@ -19,7 +19,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.dremio.arrow.gandiva</groupId>
+    <groupId>org.apache.arrow.gandiva</groupId>
     <artifactId>gandiva-java</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
@@ -33,12 +33,6 @@
         <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
         <gandiva.cpp.build.dir>../cpp/debug</gandiva.cpp.build.dir>
     </properties>
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
     <dependencies>
         <dependency>
             <groupId>org.apache.arrow</groupId>
@@ -124,13 +118,13 @@
     <build>
         <resources>
             <resource>
-                <directory>${gandiva.cpp.build.dir}/src/jni</directory>
+                <directory>${gandiva.cpp.build.dir}/debug</directory>
                 <includes>
                     <include>**/libgandiva_jni.*</include>
                 </includes>
             </resource>
             <resource>
-                <directory>${gandiva.cpp.build.dir}/src/codegen</directory>
+                <directory>${gandiva.cpp.build.dir}/debug</directory>
                 <includes>
                     <include>**/libgandiva_helpers.*</include>
                 </includes>
@@ -158,7 +152,7 @@
                 <configuration>
                     <protocArtifact>com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}
                     </protocArtifact>
-                    <protoSourceRoot>../proto</protoSourceRoot>
+                    <protoSourceRoot>../../cpp/src/gandiva/proto</protoSourceRoot>
                 </configuration>
                 <executions>
                     <execution>
@@ -212,18 +206,6 @@
                     <format>html</format>
                     <outputFile>${project.build.directory}/test/checkstyle-errors.xml</outputFile>
                     <linkXRef>false</linkXRef>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.6.8</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <!-- manually release to central -->
-                    <autoReleaseAfterClose>false</autoReleaseAfterClose>
                 </configuration>
             </plugin>
         </plugins>

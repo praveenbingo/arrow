@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-#include "codegen/expr_validator.h"
+#include "gandiva/expr_validator.h"
 
 namespace gandiva {
 

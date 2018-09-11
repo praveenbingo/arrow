@@ -20,7 +20,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "codegen/eval_batch.h"
+#include "gandiva/eval_batch.h"
 #include "gandiva/arrow.h"
 #include "gandiva/gandiva_aliases.h"
 #include "gandiva/logging.h"

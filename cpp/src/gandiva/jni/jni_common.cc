@@ -30,10 +30,10 @@
 #include "gandiva/filter.h"
 #include "gandiva/projector.h"
 #include "gandiva/tree_expr_builder.h"
-#include "jni/config_holder.h"
-#include "jni/env_helper.h"
-#include "jni/id_to_module_map.h"
-#include "jni/module_holder.h"
+#include "gandiva/jni/config_holder.h"
+#include "gandiva/jni/env_helper.h"
+#include "gandiva/jni/id_to_module_map.h"
+#include "gandiva/jni/module_holder.h"
 #include "jni/org_apache_arrow_gandiva_evaluator_JniWrapper.h"
 
 using gandiva::ConditionPtr;

@@ -20,8 +20,8 @@
 #include <utility>
 
 #include <gtest/gtest_prod.h>
-#include "codegen/node.h"
-#include "codegen/node_visitor.h"
+#include "gandiva/node.h"
+#include "gandiva/node_visitor.h"
 #include "gandiva/expression.h"
 
 namespace gandiva {

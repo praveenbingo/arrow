@@ -17,7 +17,7 @@
 #include "gandiva/projector.h"
 #include "gandiva/status.h"
 #include "gandiva/tree_expr_builder.h"
-#include "integ/test_util.h"
+#include "gandiva/tests/test_util.h"
 
 namespace gandiva {
 

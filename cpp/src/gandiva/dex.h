@@ -18,13 +18,13 @@
 #include <string>
 #include <vector>
 
-#include "codegen/dex_visitor.h"
-#include "codegen/field_descriptor.h"
-#include "codegen/func_descriptor.h"
-#include "codegen/function_holder.h"
-#include "codegen/literal_holder.h"
-#include "codegen/native_function.h"
-#include "codegen/value_validity_pair.h"
+#include "gandiva/dex_visitor.h"
+#include "gandiva/field_descriptor.h"
+#include "gandiva/func_descriptor.h"
+#include "gandiva/function_holder.h"
+#include "gandiva/literal_holder.h"
+#include "gandiva/native_function.h"
+#include "gandiva/value_validity_pair.h"
 #include "gandiva/gandiva_aliases.h"
 
 namespace gandiva {

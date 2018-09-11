@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "codegen/like_holder.h"
-#include "codegen/regex_util.h"
+#include "gandiva/like_holder.h"
+#include "gandiva/regex_util.h"
 
 #include <memory>
 #include <vector>

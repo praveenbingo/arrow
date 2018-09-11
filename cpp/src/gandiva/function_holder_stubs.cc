@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "codegen/like_holder.h"
+#include "gandiva/like_holder.h"
 
 // Wrapper C functions for "like" to be invoked from LLVM.
 extern "C" bool like_utf8_utf8(int64_t ptr, const char *data, int data_len,

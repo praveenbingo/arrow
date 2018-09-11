@@ -16,7 +16,7 @@
 #define GANDIVA_COMPILED_EXPR_H
 
 #include <llvm/IR/IRBuilder.h>
-#include "codegen/value_validity_pair.h"
+#include "gandiva/value_validity_pair.h"
 
 namespace gandiva {
 

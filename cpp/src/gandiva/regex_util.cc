@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "codegen/regex_util.h"
+#include "gandiva/regex_util.h"
 
 namespace gandiva {
 

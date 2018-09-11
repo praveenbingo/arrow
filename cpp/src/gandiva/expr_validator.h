@@ -19,10 +19,10 @@
 #include <unordered_map>
 
 #include "boost/functional/hash.hpp"
-#include "codegen/function_registry.h"
-#include "codegen/llvm_types.h"
-#include "codegen/node.h"
-#include "codegen/node_visitor.h"
+#include "gandiva/function_registry.h"
+#include "gandiva/llvm_types.h"
+#include "gandiva/node.h"
+#include "gandiva/node_visitor.h"
 #include "gandiva/arrow.h"
 #include "gandiva/expression.h"
 #include "gandiva/status.h"

@@ -16,8 +16,8 @@
 
 #include "boost/iterator/transform_iterator.hpp"
 
-#include "codegen/function_registry.h"
-#include "codegen/llvm_types.h"
+#include "gandiva/function_registry.h"
+#include "gandiva/llvm_types.h"
 
 namespace gandiva {
 

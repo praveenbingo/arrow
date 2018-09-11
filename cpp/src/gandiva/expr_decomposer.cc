@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "codegen/expr_decomposer.h"
+#include "gandiva/expr_decomposer.h"
 
 #include <memory>
 #include <stack>
 #include <string>
 #include <vector>
 
-#include "codegen/annotator.h"
-#include "codegen/dex.h"
-#include "codegen/function_holder_registry.h"
-#include "codegen/function_registry.h"
-#include "codegen/node.h"
+#include "gandiva/annotator.h"
+#include "gandiva/dex.h"
+#include "gandiva/function_holder_registry.h"
+#include "gandiva/function_registry.h"
+#include "gandiva/node.h"
 #include "gandiva/function_signature.h"
 
 namespace gandiva {

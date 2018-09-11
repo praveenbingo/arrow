@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "gandiva/expression.h"
-#include "codegen/node.h"
+#include "gandiva/node.h"
 
 namespace gandiva {
 

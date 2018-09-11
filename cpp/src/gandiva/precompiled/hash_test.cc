@@ -15,7 +15,7 @@
 #include <time.h>
 
 #include <gtest/gtest.h>
-#include "precompiled/types.h"
+#include "gandiva/precompiled/types.h"
 
 namespace gandiva {
 

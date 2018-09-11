@@ -18,10 +18,10 @@
 #include <utility>
 #include <vector>
 
-#include "codegen/cache.h"
-#include "codegen/expr_validator.h"
-#include "codegen/llvm_generator.h"
-#include "codegen/projector_cache_key.h"
+#include "gandiva/cache.h"
+#include "gandiva/expr_validator.h"
+#include "gandiva/llvm_generator.h"
+#include "gandiva/projector_cache_key.h"
 #include "gandiva/status.h"
 
 namespace gandiva {

@@ -15,11 +15,11 @@
 #include "gandiva/tree_expr_builder.h"
 
 #include <gtest/gtest.h>
-#include "codegen/annotator.h"
-#include "codegen/dex.h"
-#include "codegen/expr_decomposer.h"
-#include "codegen/function_registry.h"
-#include "codegen/node.h"
+#include "gandiva/annotator.h"
+#include "gandiva/dex.h"
+#include "gandiva/expr_decomposer.h"
+#include "gandiva/function_registry.h"
+#include "gandiva/node.h"
 #include "gandiva/function_signature.h"
 #include "gandiva/gandiva_aliases.h"
 

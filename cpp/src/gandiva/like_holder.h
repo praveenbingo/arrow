@@ -16,8 +16,8 @@
 #define GANDIVA_LIKE_HOLDER_H
 
 #include <re2/re2.h>
-#include "codegen/function_holder.h"
-#include "codegen/node.h"
+#include "gandiva/function_holder.h"
+#include "gandiva/node.h"
 #include "gandiva/status.h"
 
 namespace gandiva {

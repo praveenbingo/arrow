@@ -15,9 +15,9 @@
 #ifndef GANDIVA_FUNCTION_HOLDER_REGISTRY_H
 #define GANDIVA_FUNCTION_HOLDER_REGISTRY_H
 
-#include "codegen/function_holder.h"
-#include "codegen/like_holder.h"
-#include "codegen/node.h"
+#include "gandiva/function_holder.h"
+#include "gandiva/like_holder.h"
+#include "gandiva/node.h"
 #include "gandiva/status.h"
 
 namespace gandiva {

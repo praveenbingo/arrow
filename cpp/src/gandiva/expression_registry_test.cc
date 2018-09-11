@@ -18,8 +18,8 @@
 #include <vector>
 
 #include <gtest/gtest.h>
-#include "codegen/function_registry.h"
-#include "codegen/llvm_types.h"
+#include "gandiva/function_registry.h"
+#include "gandiva/llvm_types.h"
 #include "gandiva/function_signature.h"
 
 namespace gandiva {

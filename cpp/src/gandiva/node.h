@@ -18,9 +18,9 @@
 #include <string>
 #include <vector>
 
-#include "codegen/func_descriptor.h"
-#include "codegen/literal_holder.h"
-#include "codegen/node_visitor.h"
+#include "gandiva/func_descriptor.h"
+#include "gandiva/literal_holder.h"
+#include "gandiva/node_visitor.h"
 #include "gandiva/arrow.h"
 #include "gandiva/gandiva_aliases.h"
 #include "gandiva/status.h"

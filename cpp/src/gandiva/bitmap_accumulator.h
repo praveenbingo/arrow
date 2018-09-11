@@ -17,9 +17,9 @@
 
 #include <vector>
 
-#include "codegen/dex.h"
-#include "codegen/dex_visitor.h"
-#include "codegen/eval_batch.h"
+#include "gandiva/dex.h"
+#include "gandiva/dex_visitor.h"
+#include "gandiva/eval_batch.h"
 
 namespace gandiva {
 

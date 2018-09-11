@@ -18,7 +18,7 @@
 #include <utility>
 #include <vector>
 
-#include "codegen/selection_vector_impl.h"
+#include "gandiva/selection_vector_impl.h"
 #include "gandiva/status.h"
 
 namespace gandiva {
