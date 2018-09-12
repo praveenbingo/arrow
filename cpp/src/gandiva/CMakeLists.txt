@@ -94,6 +94,27 @@ build_gandiva_lib("shared" arrow_shared)
 
 build_gandiva_lib("static" arrow_static)
 
+# Pre-compiled .so library for function helpers.
+add_library(gandiva_helpers SHARED
+  ${SHARED_HELPER_FILES}
+  function_holder_stubs.cc)
+
+target_compile_definitions(gandiva_helpers
+  PRIVATE -DGDV_HELPERS
+)
+
+target_include_directories(gandiva_helpers
+  PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${ARROW_INCLUDE_DIR}
+)
+
+target_link_libraries(gandiva_helpers PRIVATE Boost::boost ${RE2_STATIC_LIB})
+if (NOT APPLE)
+  target_link_libraries(gandiva_helpers LINK_PRIVATE -static-libstdc++ -static-libgcc)
+endif()
+
 # install for gandiva
 include(GNUInstallDirs)
 
@@ -120,27 +141,6 @@ install(FILES
   tree_expr_builder.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
-
-# Pre-compiled .so library for function helpers.
-add_library(gandiva_helpers SHARED
-  ${SHARED_HELPER_FILES}
-  function_holder_stubs.cc)
-
-target_compile_definitions(gandiva_helpers
-  PRIVATE -DGDV_HELPERS
-)
-
-target_include_directories(gandiva_helpers
-  PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/src
-    ${ARROW_INCLUDE_DIR}
-)
-
-target_link_libraries(gandiva_helpers PRIVATE Boost::boost ${RE2_STATIC_LIB})
-if (NOT APPLE)
-  target_link_libraries(gandiva_helpers LINK_PRIVATE -static-libstdc++ -static-libgcc)
-endif()
 
 #args: label test-file src-files
 add_gandiva_unit_test(bitmap_accumulator_test.cc bitmap_accumulator.cc)
