@@ -37,7 +37,7 @@ add_custom_command(
   VERBATIM
 )
 
-add_custom_target(gandiva-proto ALL DEPENDS ${PROTO_OUTPUT_FILES})
+add_custom_target(gandiva_jni_proto ALL DEPENDS ${PROTO_OUTPUT_FILES})
 set(PROTO_SRCS "${PROTO_OUTPUT_DIR}/types.pb.cc")
 set(PROTO_HDRS "${PROTO_OUTPUT_DIR}/types.pb.h")
 
@@ -52,7 +52,7 @@ add_library(gandiva_jni SHARED
   jni_common.cc
   ${PROTO_SRCS}
   ${PROTO_HDRS})
-add_dependencies(gandiva_jni gandiva_java gandiva-proto)
+add_dependencies(gandiva_jni gandiva_java gandiva_jni_proto)
 
 # For users of gandiva_jni library (including integ tests), include-dir is :
 #   /usr/**/include dir after install,
