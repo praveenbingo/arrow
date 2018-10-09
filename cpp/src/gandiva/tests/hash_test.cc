@@ -134,7 +134,7 @@ TEST_F(TestHash, TestBuf) {
     EXPECT_NE(int32_arr->Value(i), int32_arr->Value(i - 1));
   }
 
-  auto int64_arr = std::dynamic_pointer_cast<arrow::Int64Array>(outputs.at(1));
+ auto int64_arr = std::dynamic_pointer_cast<arrow::Int64Array>(outputs.at(1));
   EXPECT_EQ(int64_arr->null_count(), 0);
   EXPECT_EQ(int64_arr->Value(0), 0);
   for (int i = 1; i < num_records; ++i) {
