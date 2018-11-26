@@ -30,7 +30,7 @@ pushd arrow/cpp
         cmake -DCMAKE_BUILD_TYPE=Release \
               -DARROW_GANDIVA=ON \
               -DARROW_BUILD_UTILITIES=OFF \
-              -DCMAKE_SHARED_LINKER_FLAGS="-static-libstdc++ -static-libgcc"
+              -DCMAKE_SHARED_LINKER_FLAGS="-static-libstdc++ -static-libgcc" \
               ..
         make -j4
         assert_val = $(ldd debug/libgandiva_jni.so | grep "std-c++" | wc -l)
