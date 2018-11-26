@@ -25,26 +25,25 @@ source arrow/ci/travis_env_common.sh
 pushd arrow/cpp
   mkdir build
   pushd build
-    if ("$TRAVIS_OS_NAME" -eq "linux" -a "$GANDIVA_STATIC_STD_CPP" = "ON")
-    then 
-      cmake -DCMAKE_BUILD_TYPE=Release \
-            -DARROW_GANDIVA=ON \
-            -DARROW_BUILD_UTILITIES=OFF \
-            -DCMAKE_SHARED_LINKER_FLAGS="-static-libstdc++ -static-libgcc"
-      make -j4
-      assert_val = $(ldd debug/libgandiva_jni.so | grep "std-c++" | wc -l)
-      # assert that std c++ is not a dynamic dependency when we want to link
-      # statically.
-      if ($assert_val -ne 0)
-      then
-      	exit -1;
-      fi
+    if [ "$TRAVIS_OS_NAME" -eq "linux" -a "$GANDIVA_STATIC_STD_CPP" -eq "ON" ]; then 
+        cmake -DCMAKE_BUILD_TYPE=Release \
+              -DARROW_GANDIVA=ON \
+              -DARROW_BUILD_UTILITIES=OFF \
+              -DCMAKE_SHARED_LINKER_FLAGS="-static-libstdc++ -static-libgcc"
+              ..
+        make -j4
+        assert_val = $(ldd debug/libgandiva_jni.so | grep "std-c++" | wc -l)
+        # assert that std c++ is not a dynamic dependency when we want to link
+        # statically.
+        if [ $assert_val -ne 0 ]; then
+      	   exit -1;
+        fi
     else
-      cmake -DCMAKE_BUILD_TYPE=Release \
-            -DARROW_GANDIVA=ON \
-            -DARROW_BUILD_UTILITIES=OFF \
-          ..
-      make -j4    
+        cmake -DCMAKE_BUILD_TYPE=Release \
+              -DARROW_GANDIVA=ON \
+              -DARROW_BUILD_UTILITIES=OFF \
+              ..
+        make -j4    
     fi
     ctest
   popd
