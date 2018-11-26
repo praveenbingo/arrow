@@ -25,8 +25,7 @@ source arrow/ci/travis_env_common.sh
 pushd arrow/cpp
   mkdir build
   pushd build
-    echo "$TRAVIS_OS_NAME $GANDIVA_STATIC_STD_CPP"
-    if [ "$TRAVIS_OS_NAME" -eq "linux" -a "$GANDIVA_STATIC_STD_CPP" -eq "ON" ]; then 
+    if [ "$TRAVIS_OS_NAME" == "linux" -a "$GANDIVA_STATIC_STD_CPP" == "ON" ]; then 
         echo "Using custom static build of gandiva"
         cmake -DCMAKE_BUILD_TYPE=Release \
               -DARROW_GANDIVA=ON \
