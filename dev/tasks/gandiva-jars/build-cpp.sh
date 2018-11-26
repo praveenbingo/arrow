@@ -36,7 +36,7 @@ pushd arrow/cpp
         assert_val = $(ldd release/libgandiva_jni.so | grep "std-c++" | wc -l)
         # assert that std c++ is not a dynamic dependency when we want to link
         # statically.
-        if [ $assert_val -ne 0 ]; then
+        if [ "$assert_val" -ne 0 ]; then
       	   exit -1;
         fi
     else
