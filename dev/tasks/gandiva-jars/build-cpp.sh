@@ -33,7 +33,7 @@ pushd arrow/cpp
               -DCMAKE_SHARED_LINKER_FLAGS="-static-libstdc++ -static-libgcc" \
               ..
         make -j4
-        assert_val = $(ldd release/libgandiva_jni.so | grep "std-c++" | wc -l)
+        assert_val=$(ldd release/libgandiva_jni.so | grep "std-c++" | wc -l)
         # assert that std c++ is not a dynamic dependency when we want to link
         # statically.
         if [ "$assert_val" -ne 0 ]; then
