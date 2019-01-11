@@ -28,7 +28,6 @@ pushd arrow/cpp
     cmake -DCMAKE_BUILD_TYPE=Release \
           -DARROW_GANDIVA=ON \
           -DARROW_GANDIVA_JAVA=ON \
-          -DARROW_GANDIVA_STATIC_LIBSTDCPP=ON \
           -DARROW_BUILD_UTILITIES=OFF \
           -DARROW_BOOST_USE_SHARED=OFF \
           ..
