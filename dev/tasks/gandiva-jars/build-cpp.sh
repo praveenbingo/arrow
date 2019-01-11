@@ -31,6 +31,7 @@ pushd arrow/cpp
           -DARROW_BUILD_UTILITIES=OFF \
           -DARROW_BOOST_USE_SHARED=OFF \
           ..
+    echo "test latest"
     make -j4
     ctest
   popd
