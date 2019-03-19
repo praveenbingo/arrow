@@ -29,14 +29,14 @@ env:
   global:
     - PLAT=x86_64
     - TRAVIS_TAG={{ task.tag }}
-    - ARROW_TRAVIS_USE_TOOLCHAIN=1
     - ARROW_TRAVIS_GANDIVA=1
 
 before_script:
   - git clone -b {{ arrow.branch }} {{ arrow.remote }} arrow
   - git -C arrow checkout {{ arrow.head }}
   - export TRAVIS_BUILD_DIR=$TRAVIS_BUILD_DIR/arrow
-  - arrow/ci/travis_install_toolchain.sh
+  - arrow/ci/travis_install_osx.sh
+  - arrow/ci/travis_install_osx_sdk.sh
 
 script:
   - mkdir -p dist
