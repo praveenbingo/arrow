@@ -41,7 +41,7 @@ if [ ! -e $CPP_TOOLCHAIN ]; then
     fi
 
     # Set up C++ toolchain from conda-forge packages for faster builds
-    time conda create -y -q -p $CPP_TOOLCHAIN \
+    time conda create -y -q -p $CPP_TOOLCHAIN $CONDA_LABEL \
         --file=$TRAVIS_BUILD_DIR/ci/conda_env_cpp.yml \
         --file=$TRAVIS_BUILD_DIR/ci/conda_env_unix.yml \
         compilers \
