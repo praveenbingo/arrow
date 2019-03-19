@@ -29,6 +29,12 @@ if [ ! -e $CPP_TOOLCHAIN ]; then
         CONDA_PACKAGES="$CONDA_PACKAGES llvmdev=$CONDA_LLVM_VERSION"
     fi
 
+    if [ $TRAVIS_OS_NAME == "linux" ]; then
+        if [ "$DISTRO_CODENAME" == "trusty" ]; then
+            CONDA_LABEL=" -c conda-forge/label/cf201901"
+        fi
+    fi
+
     if [ "$ARROW_TRAVIS_VALGRIND" == "1" ]; then
         # Use newer Valgrind
         CONDA_PACKAGES="$CONDA_PACKAGES valgrind"
