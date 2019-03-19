@@ -21,6 +21,8 @@ set -e
 
 source arrow/ci/travis_env_common.sh
 
+source $TRAVIS_BUILD_DIR/ci/travis_install_conda.sh
+
 conda activate $CPP_TOOLCHAIN
 
 # Builds arrow + gandiva and tests the same.
