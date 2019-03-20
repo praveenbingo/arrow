@@ -46,7 +46,6 @@ before_script:
   - export TRAVIS_BUILD_DIR=$TRAVIS_BUILD_DIR/arrow
   - arrow/ci/travis_install_clang_tools.sh
   - arrow/ci/travis_install_linux.sh
-  - arrow/ci/travis_install_toolchain.sh
 
 script:
   - mkdir -p dist

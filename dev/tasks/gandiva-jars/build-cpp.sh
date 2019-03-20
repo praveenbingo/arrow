@@ -23,8 +23,6 @@ source arrow/ci/travis_env_common.sh
 
 source arrow/ci/travis_install_conda.sh
 
-conda activate $CPP_TOOLCHAIN
-
 # duplicating here to simplify conda label pinning
 if [ ! -e $CPP_TOOLCHAIN ]; then
     CONDA_PACKAGES=""
@@ -45,6 +43,10 @@ if [ ! -e $CPP_TOOLCHAIN ]; then
         nomkl \
         python=3.6
 fi
+
+conda activate $CPP_TOOLCHAIN
+
+echo $CPP_TOOLCHAIN
 
 # the package we use in label above does not have cmake in lib folder
 ln -s $CPP_TOOLCHAIN/lib64/cmake/flatbuffers $CPP_TOOLCHAIN/lib/cmake
