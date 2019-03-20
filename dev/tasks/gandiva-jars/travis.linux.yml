@@ -29,6 +29,7 @@ env:
   global:
     - PLAT=x86_64
     - TRAVIS_TAG={{ task.tag }}
+    - ARROW_TRAVIS_GANDIVA=1
     - ARROW_TRAVIS_USE_TOOLCHAIN=1
 
 before_install:
