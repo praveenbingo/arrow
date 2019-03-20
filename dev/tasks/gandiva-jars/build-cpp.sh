@@ -59,7 +59,7 @@ pushd arrow/cpp
           -DARROW_GANDIVA=ON \
           -DARROW_GANDIVA_JAVA=ON \
           -DARROW_GANDIVA_STATIC_LIBSTDCPP=ON \
-          -DARROW_BUILD_TESTS=ON \
+          -DARROW_BUILD_TESTS=OFF \
           -DARROW_BUILD_UTILITIES=OFF \
           -DARROW_BOOST_USE_SHARED=OFF"
 
