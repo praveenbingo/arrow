@@ -29,7 +29,7 @@ env:
   global:
     - PLAT=x86_64
     - TRAVIS_TAG={{ task.tag }}
-    - ARROW_TRAVIS_USE_SYSTEM=1
+    - ARROW_TRAVIS_USE_TOOLCHAIN=1
 
 before_install:
   # gcc 4.9 is required for the static linking of libstdc++
@@ -46,6 +46,7 @@ before_script:
   - export TRAVIS_BUILD_DIR=$TRAVIS_BUILD_DIR/arrow
   - arrow/ci/travis_install_clang_tools.sh
   - arrow/ci/travis_install_linux.sh
+  - arrow/ci/travis_install_toolchain.sh
 
 script:
   - mkdir -p dist

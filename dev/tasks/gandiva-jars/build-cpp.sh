@@ -21,6 +21,34 @@ set -e
 
 source arrow/ci/travis_env_common.sh
 
+source arrow/ci/travis_install_conda.sh
+
+conda activate $CPP_TOOLCHAIN
+
+# duplicating here to simplify conda label pinning
+if [ ! -e $CPP_TOOLCHAIN ]; then
+    CONDA_PACKAGES=""
+    CONDA_LABEL=""
+
+    if [ "$ARROW_TRAVIS_GANDIVA" == "1" ] && [ $TRAVIS_OS_NAME == "osx" ]; then
+        CONDA_PACKAGES="$CONDA_PACKAGES llvmdev=$CONDA_LLVM_VERSION"
+    fi
+
+    CONDA_LABEL=" -c conda-forge/label/cf201901"
+
+    # Set up C++ toolchain from conda-forge packages for faster builds
+    time conda create -y -q -p $CPP_TOOLCHAIN $CONDA_LABEL \
+        --file=arrow/ci/conda_env_cpp.yml \
+        --file=arrow/ci/conda_env_unix.yml \
+        compilers \
+        $CONDA_PACKAGES \
+        nomkl \
+        python=3.6
+fi
+
+# the package we use in label above does not have cmake in lib folder
+ln -s $CPP_TOOLCHAIN/lib64/cmake/flatbuffers $CPP_TOOLCHAIN/lib/cmake
+
 # Builds arrow + gandiva and tests the same.
 pushd arrow/cpp
   mkdir build

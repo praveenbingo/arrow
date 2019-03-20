@@ -43,7 +43,7 @@ if [ "$ARROW_TRAVIS_GANDIVA" == "1" ]; then
 fi
 
 if [ "$ARROW_TRAVIS_USE_SYSTEM" == "1" ]; then
-    if { [ "$DISTRO_CODENAME" == "xenial" ] || [ "$DISTRO_CODENAME" == "trusty" ] } ; then
+    if  [ "$DISTRO_CODENAME" == "xenial" ]; then
         # TODO(ARROW-4761): Install libzstd-dev once we support zstd<1
         # TODO(ARROW-4762): Install rapidjson-dev once we support rapidjson<1.1.0
         export ADDITIONAL_APT_PKGS="libre2-dev libbrotli-dev liblz4-dev"
