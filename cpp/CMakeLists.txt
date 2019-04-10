@@ -161,7 +161,7 @@ static|shared (default shared)")
 
   option(ARROW_GANDIVA "Build the Gandiva libraries" OFF)
 
-  option(ARROW_PARQUET "Build the Parquet libraries" OFF)
+  option(ARROW_PARQUET "Build the Parquet libraries" ON)
 
   option(ARROW_IPC "Build the Arrow IPC extensions" ON)
 
@@ -300,7 +300,7 @@ Always OFF if building binaries" OFF)
          OFF)
 
   option(PARQUET_BUILD_EXAMPLES
-         "Build the Parquet examples. Requires static libraries to be built." OFF)
+         "Build the Parquet examples. Requires static libraries to be built." ON)
 
   #----------------------------------------------------------------------
   # Gandiva build options
@@ -450,6 +450,8 @@ endif()
 #
 # Set up various options
 #
+set(ARROW_PARQUET ON)
+set (PARQUET_BUILD_EXAMPLES ON)
 
 if(ARROW_BUILD_TESTS OR ARROW_BUILD_BENCHMARKS)
   # Currently the compression tests require at least these libraries; bz2 and
@@ -929,11 +931,14 @@ if(NOT WIN32 AND ARROW_PLASMA)
 endif()
 
 add_subdirectory(src/arrow)
+message("IAMHERE")
 
 if(ARROW_PARQUET)
+  message("Here")
   add_subdirectory(src/parquet)
   add_subdirectory(tools/parquet)
   if(PARQUET_BUILD_EXAMPLES)
+      message("Here1")
     add_subdirectory(examples/parquet)
   endif()
 endif()

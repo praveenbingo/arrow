@@ -30,6 +30,12 @@ else()
   target_link_libraries(parquet-arrow-example parquet_static)
 endif()
 
+#add_executable(parquet-file-generator low-level-api/generator/parquet-generator.cc low-level-api/generator/schema-reader.cc low-level-api/generator/random-data-generator.cc)
+add_executable(parquet-file-generator low-level-api/generator/parquet-generator.cc)
+target_include_directories(parquet-file-generator PRIVATE low-level-api/)
+target_link_libraries(parquet-file-generator parquet_static)
+
+
 add_dependencies(parquet
   parquet-low-level-example
   parquet-low-level-example2
