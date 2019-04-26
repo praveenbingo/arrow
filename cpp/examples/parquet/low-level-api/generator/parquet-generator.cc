@@ -65,7 +65,7 @@ void initTypeMaps() {
   physicalTypeMap.insert({"int96", Type::INT96});
   physicalTypeMap.insert({"float", Type::FLOAT});
   physicalTypeMap.insert({"double", Type::DOUBLE});
-  physicalTypeMap.insert({"binary", Type::BYTE_ARRAY});
+  physicalTypeMap.insert({"bytes", Type::BYTE_ARRAY});
   physicalTypeMap.insert({"fixed_len_byte_array", Type::FIXED_LEN_BYTE_ARRAY});
 
   //Populate the logicalTypeMap
@@ -146,17 +146,21 @@ int populateLogicalType(std::string input, LogicalType::type *type) {
 int populateScaleAndPrecision(Type::type physicalType, int *precision, int *scale) {
   switch(physicalType) {
     case parquet::Type::INT32:
-      *precision = 9;
-      *scale = 3;
+      *precision = 4;
+      *scale = 0;
       break;
     case parquet::Type::INT64:
-      *precision = 5;
+      *precision = 15;
       *scale = 2;
       break;
     case parquet::Type::BYTE_ARRAY:
       *precision = 38;
       *scale = 10;
       break;
+    case parquet::Type::FIXED_LEN_BYTE_ARRAY:
+      *precision = 28;
+      *scale = 10;
+      break;      
     default:
       return -1;
   }
@@ -254,6 +258,11 @@ std::shared_ptr<GroupNode> constructSchema(char *filename) {
 int generateRandom() {
   int range = randCeiling - randFloor;
   return (randFloor + (rand() % range));
+}
+
+int64_t generateRandomLong() {
+  return (static_cast<int64_t>(rand()) << (sizeof(int32_t) * 8)) |
+               rand();
 }
 
 int64_t generateData(parquet::RowGroupWriter *rg_writer, std::shared_ptr<GroupNode> schema, int columnId) {
@@ -407,16 +416,22 @@ int64_t generateData(parquet::RowGroupWriter *rg_writer, std::shared_ptr<GroupNo
           double_writer->WriteBatch(1, nullptr, nullptr, &double_value);
       }
       return double_writer->EstimatedBufferedValueBytes();
-    } else if (physicalType == parquet::Type::BYTE_ARRAY) {
+    } else if (physicalType == parquet::Type::FIXED_LEN_BYTE_ARRAY || physicalType == parquet::Type::BYTE_ARRAY) {
       parquet::ByteArrayWriter* ba_writer =
           static_cast<parquet::ByteArrayWriter*>(rg_writer->column(columnId));
       parquet::ByteArray ba_value;
       char hello[10] = "parquet";
-      hello[7] = static_cast<char>(static_cast<int>('0') + random / 100);
-      hello[8] = static_cast<char>(static_cast<int>('0') + (random / 10) % 10);
-      hello[9] = static_cast<char>(static_cast<int>('0') + random % 10);
-      ba_value.ptr = reinterpret_cast<const uint8_t*>(&hello[0]);
-      ba_value.len = 10;
+      if (field->logical_type() == parquet::LogicalType::DECIMAL) {
+         int64_t value = generateRandomLong();
+         ba_value.ptr = reinterpret_cast<const uint8_t*>(&value);
+         ba_value.len = 8;
+      } else {        
+        hello[7] = static_cast<char>(static_cast<int>('0') + random / 100);
+        hello[8] = static_cast<char>(static_cast<int>('0') + (random / 10) % 10);
+        hello[9] = static_cast<char>(static_cast<int>('0') + random % 10);
+        ba_value.ptr = reinterpret_cast<const uint8_t*>(&hello[0]);
+        ba_value.len = 10;
+      }
       switch(repetition) {
         case parquet::Repetition::OPTIONAL:
           if (random % 3 == 0) {
@@ -425,20 +440,26 @@ int64_t generateData(parquet::RowGroupWriter *rg_writer, std::shared_ptr<GroupNo
           } else {
             ba_writer->WriteBatch(1, &definitionLevel, nullptr, &ba_value);
           }
-	  break;
+	        break;
         case parquet::Repetition::REPEATED:
           for (int16_t repetitionLevel = 0; repetitionLevel < 2; repetitionLevel++) {
-            hello[7] = static_cast<char>(static_cast<int>('0') + (random + repetitionLevel) / 100);
-            hello[8] = static_cast<char>(static_cast<int>('0') + ((random + repetitionLevel) / 10) % 10);
-            hello[9] = static_cast<char>(static_cast<int>('0') + (random + repetitionLevel) % 10);
-            ba_value.ptr = reinterpret_cast<const uint8_t*>(&hello[0]);
-            ba_value.len = 10;
+            if (field->logical_type() == parquet::LogicalType::DECIMAL) {
+              int64_t value = generateRandomLong();
+              ba_value.ptr = reinterpret_cast<const uint8_t*>(&value);
+              ba_value.len = 8;
+            } else {
+              hello[7] = static_cast<char>(static_cast<int>('0') + (random + repetitionLevel) / 100);
+              hello[8] = static_cast<char>(static_cast<int>('0') + ((random + repetitionLevel) / 10) % 10);
+              hello[9] = static_cast<char>(static_cast<int>('0') + (random + repetitionLevel) % 10);
+              ba_value.ptr = reinterpret_cast<const uint8_t*>(&hello[0]);
+              ba_value.len = 10;
+            }
             ba_writer->WriteBatch(1, &definitionLevel, &repetitionLevel, &ba_value);
           }
           break;
         default:
           ba_writer->WriteBatch(1, nullptr, nullptr, &ba_value);
-      }
+      } 
       return ba_writer->EstimatedBufferedValueBytes();
     }
     return -1;
