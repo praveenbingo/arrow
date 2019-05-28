@@ -17,10 +17,9 @@
 
 package org.apache.arrow.vector;
 
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.vector.ipc.message.ArrowFieldNode;
-
-import io.netty.buffer.ArrowBuf;
 
 /**
  * Helper class for performing generic operations on a bit vector buffer.
@@ -96,9 +95,6 @@ public class BitVectorHelper {
       validityBuffer = allocator.buffer(getValidityBufferSize(valueCount));
     }
     setValidityBit(validityBuffer, index, value);
-    if (index == (valueCount - 1)) {
-      validityBuffer.writerIndex(getValidityBufferSize(valueCount));
-    }
 
     return validityBuffer;
   }

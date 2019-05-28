@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import io.netty.buffer.ArrowBuf;
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.ReferenceManager;
 
 <@pp.dropOutputFile />
@@ -27,7 +27,6 @@ import org.apache.arrow.memory.ReferenceManager;
 package org.apache.arrow.vector.complex;
 
 <#include "/@includes/vv_imports.ftl" />
-import io.netty.buffer.ArrowBuf;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -122,15 +121,9 @@ public class UnionVector implements FieldVector {
   @Override
   public List<ArrowBuf> getFieldBuffers() {
     List<ArrowBuf> result = new ArrayList<>(1);
-    setReaderAndWriterIndex();
     result.add(typeBuffer);
 
     return result;
-  }
-
-  private void setReaderAndWriterIndex() {
-    typeBuffer.readerIndex(0);
-    typeBuffer.writerIndex(valueCount * TYPE_WIDTH);
   }
 
   @Override
@@ -264,7 +257,6 @@ public class UnionVector implements FieldVector {
 
   private void allocateTypeBuffer() {
     typeBuffer = allocator.buffer(typeBufferAllocationSizeInBytes);
-    typeBuffer.readerIndex(0);
     typeBuffer.setZero(0, typeBuffer.capacity());
   }
 
@@ -466,7 +458,6 @@ public class UnionVector implements FieldVector {
   @Override
   public ArrowBuf[] getBuffers(boolean clear) {
     List<ArrowBuf> list = new java.util.ArrayList<>();
-    setReaderAndWriterIndex();
     if (getBufferSize() != 0) {
       list.add(typeBuffer);
       list.addAll(java.util.Arrays.asList(internalStruct.getBuffers(clear)));

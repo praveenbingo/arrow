@@ -21,10 +21,12 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 
+import org.apache.arrow.memory.ArrowBuf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.netty.buffer.ArrowBuf;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.NettyArrowBuf;
 
 public class ReadChannel implements AutoCloseable {
 
@@ -74,10 +76,16 @@ public class ReadChannel implements AutoCloseable {
    * @return the number of bytes read
    * @throws IOException if nit enough bytes left to read
    */
-  public int readFully(ArrowBuf buffer, int l) throws IOException {
-    int n = readFully(buffer.nioBuffer(buffer.writerIndex(), l));
-    buffer.writerIndex(n);
+  public int readFully(ArrowBuf buffer, int startIndex, int l) throws IOException {
+    ByteBuffer byteBuf = buffer.isEmpty() ? ByteBuffer.allocateDirect(0) : asNettyBuffer(buffer)
+            .nioBuffer(startIndex, l);
+    int n = readFully(byteBuf);
     return n;
+  }
+
+  private ByteBuf asNettyBuffer(ArrowBuf buffer) {
+    return new NettyArrowBuf(buffer, buffer.getReferenceManager().getAllocator()
+            .getAsByteBufAllocator(), buffer.capacity());
   }
 
   @Override

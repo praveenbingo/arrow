@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BaseAllocator;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
@@ -46,9 +47,6 @@ import org.apache.arrow.vector.util.TransferPair;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import io.netty.buffer.ArrowBuf;
-
 
 public class TestValueVector {
 
@@ -700,7 +698,7 @@ public class TestValueVector {
       ArrowBuf validityVectorBuf = buffers.get(0);
 
       /* bitvector tracks 1024 integers --> 1024 bits --> 128 bytes */
-      assertTrue(validityVectorBuf.readableBytes() >= 128);
+      assertTrue(validityVectorBuf.capacity() >= 128);
       assertEquals(3, validityVectorBuf.getByte(0)); // 1st and second bit defined
       for (int i = 1; i < 12; i++) {
         assertEquals(0, validityVectorBuf.getByte(i)); // nothing defined until 100

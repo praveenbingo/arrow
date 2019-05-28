@@ -17,9 +17,9 @@
 
 package org.apache.arrow.vector.util;
 
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BoundsChecking;
 
-import io.netty.buffer.ArrowBuf;
 import io.netty.util.internal.PlatformDependent;
 
 public class ByteFunctionHelpers {

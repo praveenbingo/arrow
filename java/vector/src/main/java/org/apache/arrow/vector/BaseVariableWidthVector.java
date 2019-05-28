@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BaseAllocator;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.OutOfMemoryException;
@@ -31,8 +32,6 @@ import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.util.CallBack;
 import org.apache.arrow.vector.util.OversizedAllocationException;
 import org.apache.arrow.vector.util.TransferPair;
-
-import io.netty.buffer.ArrowBuf;
 
 /**
  * BaseVariableWidthVector is a base class providing functionality for variable width
@@ -323,31 +322,11 @@ public abstract class BaseVariableWidthVector extends BaseValueVector
    */
   public List<ArrowBuf> getFieldBuffers() {
     List<ArrowBuf> result = new ArrayList<>(3);
-    setReaderAndWriterIndex();
     result.add(validityBuffer);
     result.add(offsetBuffer);
     result.add(valueBuffer);
 
     return result;
-  }
-
-  /**
-   * Set the reader and writer indexes for the inner buffers.
-   */
-  private void setReaderAndWriterIndex() {
-    validityBuffer.readerIndex(0);
-    offsetBuffer.readerIndex(0);
-    valueBuffer.readerIndex(0);
-    if (valueCount == 0) {
-      validityBuffer.writerIndex(0);
-      offsetBuffer.writerIndex(0);
-      valueBuffer.writerIndex(0);
-    } else {
-      final int lastDataOffset = getstartOffset(valueCount);
-      validityBuffer.writerIndex(getValidityBufferSizeFromCount(valueCount));
-      offsetBuffer.writerIndex((valueCount + 1) * OFFSET_WIDTH);
-      valueBuffer.writerIndex(lastDataOffset);
-    }
   }
 
   /**
@@ -442,7 +421,6 @@ public abstract class BaseVariableWidthVector extends BaseValueVector
     /* allocate data buffer */
     int curSize = valueBufferSize;
     valueBuffer = allocator.buffer(curSize);
-    valueBuffer.readerIndex(0);
 
     /* allocate offset buffer and validity buffer */
     DataAndValidityBuffers buffers = allocFixedDataAndValidityBufs(valueCount + 1, OFFSET_WIDTH);
@@ -459,7 +437,6 @@ public abstract class BaseVariableWidthVector extends BaseValueVector
   private void allocateOffsetBuffer(final long size) {
     final int curSize = (int) size;
     offsetBuffer = allocator.buffer(curSize);
-    offsetBuffer.readerIndex(0);
     initOffsetBuffer();
   }
 
@@ -467,7 +444,6 @@ public abstract class BaseVariableWidthVector extends BaseValueVector
   private void allocateValidityBuffer(final long size) {
     final int curSize = (int) size;
     validityBuffer = allocator.buffer(curSize);
-    validityBuffer.readerIndex(0);
     initValidityBuffer();
   }
 
@@ -621,13 +597,12 @@ public abstract class BaseVariableWidthVector extends BaseValueVector
    *
    * @param clear Whether to clear vector before returning; the buffers will still be refcounted
    *              but the returned array will be the only reference to them
-   * @return The underlying {@link io.netty.buffer.ArrowBuf buffers} that is used by this
+   * @return The underlying {@link ArrowBuf buffers} that is used by this
    *         vector instance.
    */
   @Override
   public ArrowBuf[] getBuffers(boolean clear) {
     final ArrowBuf[] buffers;
-    setReaderAndWriterIndex();
     if (getBufferSize() == 0) {
       buffers = new ArrowBuf[0];
     } else {
@@ -867,7 +842,6 @@ public abstract class BaseVariableWidthVector extends BaseValueVector
     }
     fillHoles(valueCount);
     lastSet = valueCount - 1;
-    setReaderAndWriterIndex();
   }
 
   /**
@@ -1140,7 +1114,7 @@ public abstract class BaseVariableWidthVector extends BaseValueVector
     final int startOffset = offsetBuffer.getInt(index * OFFSET_WIDTH);
     offsetBuffer.setInt((index + 1) * OFFSET_WIDTH, startOffset + length);
     final ArrowBuf bb = buffer.slice(start, length);
-    valueBuffer.setBytes(startOffset, bb);
+    valueBuffer.setBytes(startOffset, bb, 0);
     lastSet = index;
   }
 
@@ -1162,7 +1136,7 @@ public abstract class BaseVariableWidthVector extends BaseValueVector
     final int startOffset = offsetBuffer.getInt(index * OFFSET_WIDTH);
     offsetBuffer.setInt((index + 1) * OFFSET_WIDTH, startOffset + length);
     final ArrowBuf bb = buffer.slice(start, length);
-    valueBuffer.setBytes(startOffset, bb);
+    valueBuffer.setBytes(startOffset, bb, 0);
     lastSet = index;
   }
 
@@ -1266,9 +1240,6 @@ public abstract class BaseVariableWidthVector extends BaseValueVector
       buffer = allocator.buffer(valueCount * OFFSET_WIDTH);
     }
     buffer.setInt(index * OFFSET_WIDTH, value);
-    if (index == (valueCount - 1)) {
-      buffer.writerIndex(valueCount * OFFSET_WIDTH);
-    }
 
     return buffer;
   }

@@ -52,7 +52,7 @@ import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
-import io.netty.buffer.ArrowBuf;
+import org.apache.arrow.memory.ArrowBuf;
 
 public class ProjectorTest extends BaseEvaluatorTest {
 

@@ -17,8 +17,6 @@
 
 package org.apache.arrow.memory;
 
-import io.netty.buffer.ArrowBuf;
-
 public class OwnershipTransferNOOP implements OwnershipTransferResult {
   private final ArrowBuf buffer;
 

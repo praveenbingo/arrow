@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.vector.ipc.message.FBSerializable;
 import org.apache.arrow.vector.ipc.message.MessageSerializer;
 import org.slf4j.Logger;
@@ -28,7 +29,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.flatbuffers.FlatBufferBuilder;
 
-import io.netty.buffer.ArrowBuf;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.NettyArrowBuf;
 
 /**
  * Wrapper around a WritableByteChannel that maintains the position as well adding
@@ -105,7 +107,7 @@ public class WriteChannel implements AutoCloseable {
    * Writes the buffer to the underlying channel.
    */
   public void write(ArrowBuf buffer) throws IOException {
-    ByteBuffer nioBuffer = buffer.nioBuffer(buffer.readerIndex(), buffer.readableBytes());
+    ByteBuffer nioBuffer = asNettyBuffer(buffer).nioBuffer(0, buffer.capacity());
     write(nioBuffer);
   }
 
@@ -129,5 +131,10 @@ public class WriteChannel implements AutoCloseable {
     int root = writer.writeTo(builder);
     builder.finish(root);
     return builder.dataBuffer();
+  }
+
+  private ByteBuf asNettyBuffer(ArrowBuf buffer) {
+    return new NettyArrowBuf(buffer, buffer.getReferenceManager().getAllocator()
+            .getAsByteBufAllocator(), buffer.capacity());
   }
 }

@@ -32,6 +32,7 @@ import java.util.List;
 import org.apache.arrow.flatbuf.FieldNode;
 import org.apache.arrow.flatbuf.Message;
 import org.apache.arrow.flatbuf.RecordBatch;
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.FieldVector;
@@ -39,9 +40,6 @@ import org.apache.arrow.vector.TestUtils;
 import org.apache.arrow.vector.VectorLoader;
 import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.VectorUnloader;
-import org.apache.arrow.vector.ipc.ArrowFileReader;
-import org.apache.arrow.vector.ipc.ArrowFileWriter;
-import org.apache.arrow.vector.ipc.SeekableReadChannel;
 import org.apache.arrow.vector.ipc.message.ArrowBlock;
 import org.apache.arrow.vector.ipc.message.ArrowFieldNode;
 import org.apache.arrow.vector.ipc.message.ArrowRecordBatch;
@@ -52,8 +50,6 @@ import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.arrow.vector.util.ByteArrayReadableSeekableByteChannel;
 import org.junit.Before;
 import org.junit.Test;
-
-import io.netty.buffer.ArrowBuf;
 
 public class TestArrowReaderWriter {
 
@@ -66,13 +62,13 @@ public class TestArrowReaderWriter {
 
   ArrowBuf buf(byte[] bytes) {
     ArrowBuf buffer = allocator.buffer(bytes.length);
-    buffer.writeBytes(bytes);
+    buffer.writeBytes(0, bytes);
     return buffer;
   }
 
   byte[] array(ArrowBuf buf) {
-    byte[] bytes = new byte[buf.readableBytes()];
-    buf.readBytes(bytes);
+    byte[] bytes = new byte[buf.capacity()];
+    buf.readBytes(0, bytes);
     return bytes;
   }
 

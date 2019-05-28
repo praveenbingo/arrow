@@ -15,9 +15,6 @@
  * limitations under the License.
  */
 
-import io.netty.buffer.ArrowBuf;
-import org.apache.arrow.vector.types.Types;
-import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 
 <@pp.dropOutputFile />

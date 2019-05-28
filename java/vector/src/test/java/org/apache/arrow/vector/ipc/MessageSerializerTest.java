@@ -31,6 +31,7 @@ import java.nio.channels.Channels;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.ipc.message.ArrowBlock;
@@ -47,19 +48,17 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import io.netty.buffer.ArrowBuf;
-
 public class MessageSerializerTest {
 
   public static ArrowBuf buf(BufferAllocator alloc, byte[] bytes) {
     ArrowBuf buffer = alloc.buffer(bytes.length);
-    buffer.writeBytes(bytes);
+    buffer.writeBytes(0, bytes);
     return buffer;
   }
 
   public static byte[] array(ArrowBuf buf) {
-    byte[] bytes = new byte[buf.readableBytes()];
-    buf.readBytes(bytes);
+    byte[] bytes = new byte[buf.capacity()];
+    buf.readBytes(0, bytes);
     return bytes;
   }
 

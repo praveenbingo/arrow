@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BaseAllocator;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.OutOfMemoryException;
@@ -50,8 +51,6 @@ import org.apache.arrow.vector.util.JsonStringArrayList;
 import org.apache.arrow.vector.util.OversizedAllocationException;
 import org.apache.arrow.vector.util.SchemaChangeRuntimeException;
 import org.apache.arrow.vector.util.TransferPair;
-
-import io.netty.buffer.ArrowBuf;
 
 /** A ListVector where every list value is of the same size. */
 public class FixedSizeListVector extends BaseValueVector implements FieldVector, PromotableVector {
@@ -158,15 +157,9 @@ public class FixedSizeListVector extends BaseValueVector implements FieldVector,
   @Override
   public List<ArrowBuf> getFieldBuffers() {
     List<ArrowBuf> result = new ArrayList<>(1);
-    setReaderAndWriterIndex();
     result.add(validityBuffer);
 
     return result;
-  }
-
-  private void setReaderAndWriterIndex() {
-    validityBuffer.readerIndex(0);
-    validityBuffer.writerIndex(getValidityBufferSizeFromCount(valueCount));
   }
 
   @Override
@@ -214,7 +207,6 @@ public class FixedSizeListVector extends BaseValueVector implements FieldVector,
   private void allocateValidityBuffer(final long size) {
     final int curSize = (int) size;
     validityBuffer = allocator.buffer(curSize);
-    validityBuffer.readerIndex(0);
     validityAllocationSizeInBytes = curSize;
     validityBuffer.setZero(0, validityBuffer.capacity());
   }
@@ -306,7 +298,6 @@ public class FixedSizeListVector extends BaseValueVector implements FieldVector,
 
   @Override
   public ArrowBuf[] getBuffers(boolean clear) {
-    setReaderAndWriterIndex();
     final ArrowBuf[] buffers;
     if (getBufferSize() == 0) {
       buffers = new ArrowBuf[0];

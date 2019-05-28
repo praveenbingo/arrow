@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.OutOfMemoryException;
 import org.apache.arrow.vector.ipc.message.ArrowFieldNode;
@@ -30,8 +31,6 @@ import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.util.CallBack;
 import org.apache.arrow.vector.util.OversizedAllocationException;
 import org.apache.arrow.vector.util.TransferPair;
-
-import io.netty.buffer.ArrowBuf;
 
 /**
  * BaseFixedWidthVector provides an abstract interface for
@@ -337,7 +336,6 @@ public abstract class BaseFixedWidthVector extends BaseValueVector
    */
   private void allocateValidityBuffer(final int validityBufferSize) {
     validityBuffer = allocator.buffer(validityBufferSize);
-    validityBuffer.readerIndex(0);
   }
 
   /**
@@ -384,13 +382,12 @@ public abstract class BaseFixedWidthVector extends BaseValueVector
    *
    * @param clear Whether to clear vector before returning; the buffers will still be refcounted
    *              but the returned array will be the only reference to them
-   * @return The underlying {@link io.netty.buffer.ArrowBuf buffers} that is used by this
+   * @return The underlying {@link ArrowBuf buffers} that is used by this
    *         vector instance.
    */
   @Override
   public ArrowBuf[] getBuffers(boolean clear) {
     final ArrowBuf[] buffers;
-    setReaderAndWriterIndex();
     if (getBufferSize() == 0) {
       buffers = new ArrowBuf[0];
     } else {
@@ -497,31 +494,10 @@ public abstract class BaseFixedWidthVector extends BaseValueVector
    */
   public List<ArrowBuf> getFieldBuffers() {
     List<ArrowBuf> result = new ArrayList<>(2);
-    setReaderAndWriterIndex();
     result.add(validityBuffer);
     result.add(valueBuffer);
 
     return result;
-  }
-
-  /**
-   * Set the reader and writer indexes for the inner buffers.
-   */
-  private void setReaderAndWriterIndex() {
-    validityBuffer.readerIndex(0);
-    valueBuffer.readerIndex(0);
-    if (valueCount == 0) {
-      validityBuffer.writerIndex(0);
-      valueBuffer.writerIndex(0);
-    } else {
-      validityBuffer.writerIndex(getValidityBufferSizeFromCount(valueCount));
-      if (typeWidth == 0) {
-        /* specialized handling for BitVector */
-        valueBuffer.writerIndex(getValidityBufferSizeFromCount(valueCount));
-      } else {
-        valueBuffer.writerIndex(valueCount * typeWidth);
-      }
-    }
   }
 
   /**
@@ -733,7 +709,6 @@ public abstract class BaseFixedWidthVector extends BaseValueVector
         decrementAllocationMonitor();
       }
     }
-    setReaderAndWriterIndex();
   }
 
   /**

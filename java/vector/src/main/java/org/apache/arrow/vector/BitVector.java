@@ -19,6 +19,7 @@ package org.apache.arrow.vector;
 
 import static org.apache.arrow.vector.NullCheckingForGet.NULL_CHECKING_ENABLED;
 
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.vector.complex.impl.BitReaderImpl;
 import org.apache.arrow.vector.complex.reader.FieldReader;
@@ -28,8 +29,6 @@ import org.apache.arrow.vector.types.Types.MinorType;
 import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.util.OversizedAllocationException;
 import org.apache.arrow.vector.util.TransferPair;
-
-import io.netty.buffer.ArrowBuf;
 
 /**
  * BitVector implements a fixed width (1 bit) vector of
@@ -182,7 +181,6 @@ public class BitVector extends BaseFixedWidthVector {
          * another part in (i+1)-th byte.
          */
         destBuffer = allocator.buffer(byteSizeTarget);
-        destBuffer.readerIndex(0);
         destBuffer.setZero(0, destBuffer.capacity());
 
         for (int i = 0; i < byteSizeTarget - 1; i++) {

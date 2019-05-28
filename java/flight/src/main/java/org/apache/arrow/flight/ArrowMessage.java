@@ -33,6 +33,7 @@ import org.apache.arrow.flight.grpc.AddWritableBuffer;
 import org.apache.arrow.flight.grpc.GetReadableBuffer;
 import org.apache.arrow.flight.impl.Flight.FlightData;
 import org.apache.arrow.flight.impl.Flight.FlightDescriptor;
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.util.AutoCloseables;
 import org.apache.arrow.vector.ipc.message.ArrowRecordBatch;
@@ -55,10 +56,10 @@ import io.grpc.MethodDescriptor.Marshaller;
 import io.grpc.internal.ReadableBuffer;
 import io.grpc.protobuf.ProtoUtils;
 
-import io.netty.buffer.ArrowBuf;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.CompositeByteBuf;
+import io.netty.buffer.NettyArrowBuf;
 import io.netty.buffer.Unpooled;
 
 /**
@@ -210,13 +211,12 @@ class ArrowMessage implements AutoCloseable {
             body = allocator.buffer(size);
             ReadableBuffer readableBuffer = FAST_PATH ? GetReadableBuffer.getReadableBuffer(stream) : null;
             if (readableBuffer != null) {
-              readableBuffer.readBytes(body.nioBuffer(0, size));
+              readableBuffer.readBytes(getNettyArrowBuffer(body).nioBuffer(0, size));
             } else {
               byte[] heapBytes = new byte[size];
               ByteStreams.readFully(stream, heapBytes);
-              body.writeBytes(heapBytes);
+              body.writeBytes(0, heapBytes);
             }
-            body.writerIndex(size);
             break;
 
           default:
@@ -229,6 +229,11 @@ class ArrowMessage implements AutoCloseable {
       throw new RuntimeException(ioe);
     }
 
+  }
+
+  private static NettyArrowBuf getNettyArrowBuffer(ArrowBuf metadataBuffer) {
+    return new NettyArrowBuf(metadataBuffer, metadataBuffer.getReferenceManager().getAllocator()
+            .getAsByteBufAllocator(), metadataBuffer.capacity());
   }
 
   private static int readRawVarint32(InputStream is) throws IOException {
@@ -271,11 +276,11 @@ class ArrowMessage implements AutoCloseable {
       int size = 0;
       List<ByteBuf> allBufs = new ArrayList<>();
       for (ArrowBuf b : bufs) {
-        allBufs.add(b.asNettyBuffer());
-        size += b.readableBytes();
+        allBufs.add(getNettyArrowBuffer(b));
+        size += b.capacity();
         // [ARROW-4213] These buffers must be aligned to an 8-byte boundary in order to be readable from C++.
-        if (b.readableBytes() % 8 != 0) {
-          int paddingBytes = 8 - (b.readableBytes() % 8);
+        if (b.capacity() % 8 != 0) {
+          int paddingBytes = 8 - (b.capacity() % 8);
           assert paddingBytes > 0 && paddingBytes < 8;
           size += paddingBytes;
           allBufs.add(PADDING_BUFFERS.get(paddingBytes).retain());
@@ -286,9 +291,10 @@ class ArrowMessage implements AutoCloseable {
       cos.flush();
 
       ArrowBuf initialBuf = allocator.buffer(baos.size());
-      initialBuf.writeBytes(baos.toByteArray());
+      initialBuf.writeBytes(0, baos.toByteArray());
       final CompositeByteBuf bb = new CompositeByteBuf(allocator.getAsByteBufAllocator(), true, bufs.size() + 1,
-          ImmutableList.<ByteBuf>builder().add(initialBuf.asNettyBuffer()).addAll(allBufs).build());
+          ImmutableList.<ByteBuf>builder().add(getNettyArrowBuffer(initialBuf))
+                  .addAll(allBufs).build());
       final ByteBufInputStream is = new DrainableByteBufInputStream(bb);
       return is;
     } catch (Exception ex) {

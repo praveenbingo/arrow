@@ -24,13 +24,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.arrow.flatbuf.RecordBatch;
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BufferAllocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.flatbuffers.FlatBufferBuilder;
 
-import io.netty.buffer.ArrowBuf;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.NettyArrowBuf;
 
 public class ArrowRecordBatch implements ArrowMessage {
 
@@ -72,7 +74,7 @@ public class ArrowRecordBatch implements ArrowMessage {
     long offset = 0;
     for (ArrowBuf arrowBuf : buffers) {
       arrowBuf.getReferenceManager().retain();
-      long size = arrowBuf.readableBytes();
+      long size = arrowBuf.capacity();
       arrowBuffers.add(new ArrowBuffer(offset, size));
       LOGGER.debug("Buffer in RecordBatch at {}, length: {}", offset, size);
       offset += size;
@@ -92,7 +94,7 @@ public class ArrowRecordBatch implements ArrowMessage {
     List<ArrowBuffer> arrowBuffers = new ArrayList<>();
     long offset = 0;
     for (ArrowBuf arrowBuf : buffers) {
-      long size = arrowBuf.readableBytes();
+      long size = arrowBuf.capacity();
       arrowBuffers.add(new ArrowBuffer(offset, size));
       offset += size;
     }
@@ -137,7 +139,7 @@ public class ArrowRecordBatch implements ArrowMessage {
         .map(buf ->
           (buf.getReferenceManager().transferOwnership(buf, allocator)
             .getTransferredBuffer())
-            .writerIndex(buf.writerIndex()))
+            )
         .collect(Collectors.toList());
     close();
     return new ArrowRecordBatch(false, length, nodes, newBufs);
@@ -208,13 +210,18 @@ public class ArrowRecordBatch implements ArrowMessage {
       ArrowBuffer layout = buffersLayout.get(i);
       size += (layout.getOffset() - size);
       ByteBuffer nioBuffer =
-          buffer.nioBuffer(buffer.readerIndex(), buffer.readableBytes());
+              asNettyBuffer(buffer).nioBuffer(0, buffer.capacity());
       size += nioBuffer.remaining();
       if (size % 8 != 0) {
         size += 8 - (size % 8);
       }
     }
     return size;
+  }
+
+  private ByteBuf asNettyBuffer(ArrowBuf buffer) {
+    return new NettyArrowBuf(buffer, buffer.getReferenceManager().getAllocator()
+            .getAsByteBufAllocator(), buffer.capacity());
   }
 
 }

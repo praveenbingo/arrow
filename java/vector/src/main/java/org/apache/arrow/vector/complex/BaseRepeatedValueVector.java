@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BaseAllocator;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.util.Preconditions;
@@ -40,8 +41,6 @@ import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.util.CallBack;
 import org.apache.arrow.vector.util.OversizedAllocationException;
 import org.apache.arrow.vector.util.SchemaChangeRuntimeException;
-
-import io.netty.buffer.ArrowBuf;
 
 /** Base class for Vectors that contain repeated values. */
 public abstract class BaseRepeatedValueVector extends BaseValueVector implements RepeatedValueVector {
@@ -89,7 +88,6 @@ public abstract class BaseRepeatedValueVector extends BaseValueVector implements
   protected void allocateOffsetBuffer(final long size) {
     final int curSize = (int) size;
     offsetBuffer = allocator.buffer(curSize);
-    offsetBuffer.readerIndex(0);
     offsetAllocationSizeInBytes = curSize;
     offsetBuffer.setZero(0, offsetBuffer.capacity());
   }

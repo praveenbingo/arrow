@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.util.Preconditions;
 import org.apache.arrow.vector.FieldVector;
@@ -30,8 +31,6 @@ import org.apache.arrow.vector.ValueVector;
 import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.util.CallBack;
 import org.apache.arrow.vector.util.MapWithOrdinal;
-
-import io.netty.buffer.ArrowBuf;
 
 /**
  * Base class for StructVectors. Currently used by NonNullableStructVector
@@ -307,7 +306,7 @@ public abstract class AbstractStructVector extends AbstractContainerVector {
 
     for (final ValueVector v : vectors.values()) {
       for (final ArrowBuf buf : v.getBuffers(false)) {
-        actualBufSize += buf.writerIndex();
+        actualBufSize += buf.capacity();
       }
     }
     return actualBufSize;

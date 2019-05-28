@@ -29,6 +29,7 @@ import org.apache.arrow.flatbuf.Message;
 import org.apache.arrow.flatbuf.MessageHeader;
 import org.apache.arrow.flatbuf.MetadataVersion;
 import org.apache.arrow.flatbuf.RecordBatch;
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.vector.ipc.ReadChannel;
 import org.apache.arrow.vector.ipc.WriteChannel;
@@ -36,7 +37,7 @@ import org.apache.arrow.vector.types.pojo.Schema;
 
 import com.google.flatbuffers.FlatBufferBuilder;
 
-import io.netty.buffer.ArrowBuf;
+import io.netty.buffer.NettyArrowBuf;
 
 /**
  * Utility class for serializing Messages. Messages are all serialized a similar way.
@@ -287,14 +288,14 @@ public class MessageSerializer {
     }
 
     ArrowBuf buffer = alloc.buffer((int) totalLen);
-    if (in.readFully(buffer, (int) totalLen) != totalLen) {
+    if (in.readFully(buffer, 0,  (int) totalLen) != totalLen) {
       throw new IOException("Unexpected end of input trying to read batch.");
     }
 
     ArrowBuf metadataBuffer = buffer.slice(4, block.getMetadataLength() - 4);
 
     Message messageFB =
-        Message.getRootAsMessage(metadataBuffer.nioBuffer().asReadOnlyBuffer());
+        Message.getRootAsMessage(getNioBuffer(metadataBuffer).asReadOnlyBuffer());
 
     RecordBatch recordBatchFB = (RecordBatch) messageFB.header(new RecordBatch());
 
@@ -302,6 +303,11 @@ public class MessageSerializer {
     final ArrowBuf body = buffer.slice(block.getMetadataLength(),
         (int) totalLen - block.getMetadataLength());
     return deserializeRecordBatch(recordBatchFB, body);
+  }
+
+  private static ByteBuffer getNioBuffer(ArrowBuf metadataBuffer) {
+    return new NettyArrowBuf(metadataBuffer, metadataBuffer.getReferenceManager().getAllocator()
+            .getAsByteBufAllocator(), metadataBuffer.capacity()).nioBuffer();
   }
 
   /**
@@ -441,14 +447,14 @@ public class MessageSerializer {
     }
 
     ArrowBuf buffer = alloc.buffer((int) totalLen);
-    if (in.readFully(buffer, (int) totalLen) != totalLen) {
+    if (in.readFully(buffer, 0, (int) totalLen) != totalLen) {
       throw new IOException("Unexpected end of input trying to read batch.");
     }
 
     ArrowBuf metadataBuffer = buffer.slice(4, block.getMetadataLength() - 4);
 
     Message messageFB =
-        Message.getRootAsMessage(metadataBuffer.nioBuffer().asReadOnlyBuffer());
+        Message.getRootAsMessage(getNioBuffer(metadataBuffer).asReadOnlyBuffer());
 
     DictionaryBatch dictionaryBatchFB = (DictionaryBatch) messageFB.header(new DictionaryBatch());
 
@@ -571,7 +577,7 @@ public class MessageSerializer {
    */
   public static ArrowBuf readMessageBody(ReadChannel in, int bodyLength, BufferAllocator allocator) throws IOException {
     ArrowBuf bodyBuffer = allocator.buffer(bodyLength);
-    if (in.readFully(bodyBuffer, bodyLength) != bodyLength) {
+    if (in.readFully(bodyBuffer, 0, bodyLength) != bodyLength) {
       throw new IOException("Unexpected end of input trying to read batch.");
     }
     return bodyBuffer;

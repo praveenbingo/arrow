@@ -26,6 +26,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.ArrowByteBufAllocator;
 import org.apache.arrow.memory.BoundsChecking;
 import org.apache.arrow.util.Preconditions;
@@ -41,6 +42,7 @@ public class NettyArrowBuf extends AbstractByteBuf implements AutoCloseable  {
   private final ArrowByteBufAllocator arrowByteBufAllocator;
   private int length;
   private final long address;
+  private ArrowBuf slice;
 
   /**
    * Constructs a new instance.
@@ -58,6 +60,8 @@ public class NettyArrowBuf extends AbstractByteBuf implements AutoCloseable  {
     this.arrowByteBufAllocator = (ArrowByteBufAllocator)arrowByteBufAllocator;
     this.length = length;
     this.address = arrowBuf.memoryAddress();
+    this.readerIndex = 0;
+    this.writerIndex = length;
   }
 
   @Override
@@ -157,12 +161,14 @@ public class NettyArrowBuf extends AbstractByteBuf implements AutoCloseable  {
 
   @Override
   public NettyArrowBuf slice() {
-    return arrowBuf.slice().asNettyBuffer();
+    ArrowBuf slice = arrowBuf.slice();
+    return new NettyArrowBuf(slice, arrowByteBufAllocator, slice.capacity());
   }
 
   @Override
   public NettyArrowBuf slice(int index, int length) {
-    return arrowBuf.slice(index, length).asNettyBuffer();
+    ArrowBuf slice = arrowBuf.slice(index, length);
+    return new NettyArrowBuf(slice, arrowByteBufAllocator, slice.capacity());
   }
 
   @Override

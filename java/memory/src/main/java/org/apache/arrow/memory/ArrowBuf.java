@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package io.netty.buffer;
+package org.apache.arrow.memory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,13 +25,7 @@ import java.nio.ByteOrder;
 import java.nio.ReadOnlyBufferException;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.arrow.memory.AllocationManager;
-import org.apache.arrow.memory.BaseAllocator;
 import org.apache.arrow.memory.BaseAllocator.Verbosity;
-import org.apache.arrow.memory.BoundsChecking;
-import org.apache.arrow.memory.BufferLedger;
-import org.apache.arrow.memory.BufferManager;
-import org.apache.arrow.memory.ReferenceManager;
 import org.apache.arrow.memory.util.HistoricalLog;
 import org.apache.arrow.util.Preconditions;
 
@@ -74,8 +68,6 @@ public final class ArrowBuf implements AutoCloseable {
   private final BufferManager bufferManager;
   private final long addr;
   private final boolean isEmpty;
-  private int readerIndex;
-  private int writerIndex;
   private final HistoricalLog historicalLog = BaseAllocator.DEBUG ?
       new HistoricalLog(BaseAllocator.DEBUG_LOG_LENGTH, "ArrowBuf[%d]", id) : null;
   private volatile int length;
@@ -97,8 +89,6 @@ public final class ArrowBuf implements AutoCloseable {
     this.isEmpty = isEmpty;
     this.addr = memoryAddress;
     this.length = length;
-    this.readerIndex = 0;
-    this.writerIndex = 0;
     if (BaseAllocator.DEBUG) {
       historicalLog.recordEvent("create()");
     }
@@ -131,22 +121,6 @@ public final class ArrowBuf implements AutoCloseable {
     if (this.refCnt() == 0) {
       throw new IllegalStateException("Ref count should be >= 1 for accessing the ArrowBuf");
     }
-  }
-
-  /**
-   * Get a wrapper buffer to comply with Netty interfaces and
-   * can be used in RPC/RPC allocator code.
-   * @return netty compliant {@link NettyArrowBuf}
-   */
-  public NettyArrowBuf asNettyBuffer() {
-
-    final NettyArrowBuf nettyArrowBuf = new NettyArrowBuf(
-            this,
-            isEmpty ? null : referenceManager.getAllocator().getAsByteBufAllocator(),
-            length);
-    nettyArrowBuf.readerIndex(readerIndex);
-    nettyArrowBuf.writerIndex(writerIndex);
-    return nettyArrowBuf;
   }
 
   /**
@@ -194,26 +168,10 @@ public final class ArrowBuf implements AutoCloseable {
   }
 
   /**
-   * Returns the number of bytes still available to read in this buffer.
-   */
-  public int readableBytes() {
-    Preconditions.checkState(writerIndex >= readerIndex,
-            "Writer index cannot be less than reader index");
-    return writerIndex - readerIndex;
-  }
-
-  /**
-   * Returns the number of bytes still available to write into this buffer before capacity is reached.
-   */
-  public int writableBytes() {
-    return capacity() - writerIndex;
-  }
-
-  /**
    * Returns a slice of only the readable bytes in the buffer.
    */
   public ArrowBuf slice() {
-    return slice(readerIndex, readableBytes());
+    return slice(0, length);
   }
 
   /**
@@ -233,16 +191,7 @@ public final class ArrowBuf implements AutoCloseable {
      * explains that derived buffers share their reference count with their parent
      */
     final ArrowBuf newBuf = referenceManager.deriveBuffer(this, index, length);
-    newBuf.writerIndex(length);
     return newBuf;
-  }
-
-  public ByteBuffer nioBuffer() {
-    return isEmpty ? ByteBuffer.allocateDirect(0) : asNettyBuffer().nioBuffer();
-  }
-
-  public ByteBuffer nioBuffer(int index, int length) {
-    return isEmpty ? ByteBuffer.allocateDirect(0) : asNettyBuffer().nioBuffer(index, length);
   }
 
   public long memoryAddress() {
@@ -292,7 +241,7 @@ public final class ArrowBuf implements AutoCloseable {
    * byte address for get/set operation in the underlying chunk
    *
    * @param index the index at which we the user wants to read/write
-   * @return the absolute address within the memro
+   * @return the absolute address within the memory
    */
   private long addr(int index) {
     return addr + index;
@@ -541,34 +490,15 @@ public final class ArrowBuf implements AutoCloseable {
    * writerIndex in this ArrowBuf.
    * @param length provided length of data for set
    */
-  private void ensureWritable(final int length) {
+  private void ensureWritable(final int index, final int length) {
     if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
       Preconditions.checkArgument(length >= 0, "expecting non-negative length");
       // check reference count
       this.ensureAccessible();
       // check bounds
-      if (length > writableBytes()) {
+      if ((length + index) > this.length) {
         throw new IndexOutOfBoundsException(
-          String.format("writerIndex(%d) + length(%d) exceeds capacity(%d)", writerIndex, length, capacity()));
-      }
-    }
-  }
-
-  /**
-   * Helper function to do bound checking w.r.t readerIndex
-   * by checking if we can read "length" bytes of data at the
-   * readerIndex in this ArrowBuf.
-   * @param length provided length of data for get
-   */
-  private void ensureReadable(final int length) {
-    if (BoundsChecking.BOUNDS_CHECKING_ENABLED) {
-      Preconditions.checkArgument(length >= 0, "expecting non-negative length");
-      // check reference count
-      this.ensureAccessible();
-      // check bounds
-      if (length > readableBytes()) {
-        throw new IndexOutOfBoundsException(
-          String.format("readerIndex(%d) + length(%d) exceeds writerIndex(%d)", readerIndex, length, writerIndex));
+          String.format("writerIndex(%d) + length(%d) exceeds capacity(%d)", index, length, capacity()));
       }
     }
   }
@@ -577,10 +507,8 @@ public final class ArrowBuf implements AutoCloseable {
    * Read the byte at readerIndex.
    * @return byte value
    */
-  public byte readByte() {
-    ensureReadable(1);
-    final byte b = getByte(readerIndex);
-    ++readerIndex;
+  public byte readByte(int index) {
+    final byte b = getByte(index);
     return b;
   }
 
@@ -588,20 +516,18 @@ public final class ArrowBuf implements AutoCloseable {
    * Read dst.length bytes at readerIndex into dst byte array
    * @param dst byte array where the data will be written
    */
-  public void readBytes(byte[] dst) {
+  public void readBytes(int index, byte[] dst) {
     Preconditions.checkArgument(dst != null, "expecting valid dst bytearray");
-    ensureReadable(dst.length);
-    getBytes(readerIndex, dst, 0, dst.length);
+    getBytes(index, dst, 0, dst.length);
   }
 
   /**
    * Set the provided byte value at the writerIndex.
    * @param value value to set
    */
-  public void writeByte(byte value) {
-    ensureWritable(1);
-    PlatformDependent.putByte(addr(writerIndex), value);
-    ++writerIndex;
+  public void writeByte(int index, byte value) {
+    ensureWritable(index, 1);
+    PlatformDependent.putByte(addr(index), value);
   }
 
   /**
@@ -609,10 +535,9 @@ public final class ArrowBuf implements AutoCloseable {
    * the writerIndex.
    * @param value value to be set
    */
-  public void writeByte(int value) {
-    ensureWritable(1);
-    PlatformDependent.putByte(addr(writerIndex), (byte)value);
-    ++writerIndex;
+  public void writeByte(int index, int value) {
+    ensureWritable(index,1);
+    PlatformDependent.putByte(addr(index), (byte)value);
   }
 
   /**
@@ -620,9 +545,9 @@ public final class ArrowBuf implements AutoCloseable {
    * ArrowBuf starting at writerIndex.
    * @param src src byte array
    */
-  public void writeBytes(byte[] src) {
+  public void writeBytes(int index, byte[] src) {
     Preconditions.checkArgument(src != null, "expecting valid src array");
-    writeBytes(src, 0, src.length);
+    writeBytes(index, src, 0, src.length);
   }
 
   /**
@@ -632,60 +557,54 @@ public final class ArrowBuf implements AutoCloseable {
    * @param srcIndex index in the byte array where the copy will being from
    * @param length length of data to copy
    */
-  public void writeBytes(byte[] src, int srcIndex, int length) {
-    ensureWritable(length);
-    setBytes(writerIndex, src, srcIndex, length);
-    writerIndex += length;
+  public void writeBytes(int destIndex, byte[] src, int srcIndex, int length) {
+    ensureWritable(destIndex, length);
+    setBytes(destIndex, src, srcIndex, length);
   }
 
   /**
    * Set the provided int value as short at the writerIndex.
    * @param value value to set
    */
-  public void writeShort(int value) {
-    ensureWritable(SHORT_SIZE);
-    PlatformDependent.putShort(addr(writerIndex), (short) value);
-    writerIndex += SHORT_SIZE;
+  public void writeShort(int index, int value) {
+    ensureWritable(index, SHORT_SIZE);
+    PlatformDependent.putShort(addr(index), (short) value);
   }
 
   /**
    * Set the provided int value at the writerIndex.
    * @param value value to set
    */
-  public void writeInt(int value) {
-    ensureWritable(INT_SIZE);
-    PlatformDependent.putInt(addr(writerIndex), value);
-    writerIndex += INT_SIZE;
+  public void writeInt(int index, int value) {
+    ensureWritable(index, INT_SIZE);
+    PlatformDependent.putInt(addr(index), value);
   }
 
   /**
    * Set the provided long value at the writerIndex.
    * @param value value to set
    */
-  public void writeLong(long value) {
-    ensureWritable(LONG_SIZE);
-    PlatformDependent.putLong(addr(writerIndex), value);
-    writerIndex += LONG_SIZE;
+  public void writeLong(int index, long value) {
+    ensureWritable(index, LONG_SIZE);
+    PlatformDependent.putLong(addr(index), value);
   }
 
   /**
    * Set the provided float value at the writerIndex.
    * @param value value to set
    */
-  public void writeFloat(float value) {
-    ensureWritable(FLOAT_SIZE);
-    PlatformDependent.putInt(addr(writerIndex), Float.floatToRawIntBits(value));
-    writerIndex += FLOAT_SIZE;
+  public void writeFloat(int index, float value) {
+    ensureWritable(index, FLOAT_SIZE);
+    PlatformDependent.putInt(addr(index), Float.floatToRawIntBits(value));
   }
 
   /**
    * Set the provided double value at the writerIndex.
    * @param value value to set
    */
-  public void writeDouble(double value) {
-    ensureWritable(DOUBLE_SIZE);
-    PlatformDependent.putLong(addr(writerIndex), Double.doubleToRawLongBits(value));
-    writerIndex += DOUBLE_SIZE;
+  public void writeDouble(int index, double value) {
+    ensureWritable(index, DOUBLE_SIZE);
+    PlatformDependent.putLong(addr(index), Double.doubleToRawLongBits(value));
   }
 
 
@@ -977,16 +896,15 @@ public final class ArrowBuf implements AutoCloseable {
    *              this ArrowBuf has access to)
    * @param src src ArrowBuf where the data will be copied from
    */
-  public void setBytes(int index, ArrowBuf src) {
+  public void setBytes(int index, ArrowBuf src, int srcIndex) {
     // null check
     Preconditions.checkArgument(src != null, "expecting valid ArrowBuf");
-    final int length = src.readableBytes();
+    final int length = src.capacity() - srcIndex;
     // bound check for this ArrowBuf where the data will be copied into
     checkIndex(index, length);
-    final long srcAddress = src.memoryAddress() + (long)src.readerIndex;
+    final long srcAddress = src.memoryAddress() + (long)srcIndex;
     final long dstAddress = addr(index);
     PlatformDependent.copyMemory(srcAddress, dstAddress, (long)length);
-    src.readerIndex(src.readerIndex + length);
   }
 
   /**
@@ -1111,42 +1029,6 @@ public final class ArrowBuf implements AutoCloseable {
       sb.append("\n");
       historicalLog.buildHistory(sb, indent + 1, verbosity.includeStackTraces);
     }
-  }
-
-  /**
-   * Get the index at which the next byte will be read from.
-   * @return reader index
-   */
-  public int readerIndex() {
-    return readerIndex;
-  }
-
-  /**
-   * Get the index at which next byte will be written to.
-   * @return writer index
-   */
-  public int writerIndex() {
-    return writerIndex;
-  }
-
-  /**
-   * Set the reader index for this ArrowBuf.
-   * @param readerIndex new reader index
-   * @return this ArrowBuf
-   */
-  public ArrowBuf readerIndex(int readerIndex) {
-    this.readerIndex = readerIndex;
-    return this;
-  }
-
-  /**
-   * Set the writer index for this ArrowBuf.
-   * @param writerIndex new writer index
-   * @return this ArrowBuf
-   */
-  public ArrowBuf writerIndex(int writerIndex) {
-    this.writerIndex = writerIndex;
-    return this;
   }
 
   /**

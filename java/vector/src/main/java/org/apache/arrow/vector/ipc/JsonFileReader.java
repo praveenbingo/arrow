@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.vector.BigIntVector;
 import org.apache.arrow.vector.BitVectorHelper;
@@ -61,8 +62,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
-
-import io.netty.buffer.ArrowBuf;
 
 /**
  * A reader for JSON files that translates them into vectors. This reader is used for integration tests.
@@ -242,7 +241,6 @@ public class JsonFileReader implements AutoCloseable, DictionaryProvider {
           BitVectorHelper.setValidityBit(buf, i, parser.readValueAs(Boolean.class) ? 1 : 0);
         }
 
-        buf.writerIndex(bufferSize);
         return buf;
       }
     };
@@ -253,10 +251,12 @@ public class JsonFileReader implements AutoCloseable, DictionaryProvider {
         final int size = count * IntervalDayVector.TYPE_WIDTH;
         ArrowBuf buf = allocator.buffer(size);
 
-        for (int i = 0; i < count; i++) {
+        for (int i = 0, writeIndex = 0; i < count; i++) {
           readToken(START_OBJECT);
-          buf.writeInt(readNextField("days", Integer.class));
-          buf.writeInt(readNextField("milliseconds", Integer.class));
+          buf.writeInt(writeIndex, readNextField("days", Integer.class));
+          writeIndex += 4;
+          buf.writeInt(writeIndex, readNextField("milliseconds", Integer.class));
+          writeIndex += 4;
           readToken(END_OBJECT);
         }
 
@@ -272,7 +272,7 @@ public class JsonFileReader implements AutoCloseable, DictionaryProvider {
 
         for (int i = 0; i < count; i++) {
           parser.nextToken();
-          buf.writeByte(parser.getByteValue());
+          buf.writeByte(i, parser.getByteValue());
         }
 
         return buf;
@@ -285,9 +285,9 @@ public class JsonFileReader implements AutoCloseable, DictionaryProvider {
         final int size = count * SmallIntVector.TYPE_WIDTH;
         ArrowBuf buf = allocator.buffer(size);
 
-        for (int i = 0; i < count; i++) {
+        for (int i = 0, writeIndex = 0; i < count; i++, writeIndex += 2) {
           parser.nextToken();
-          buf.writeShort(parser.getShortValue());
+          buf.writeShort(writeIndex, parser.getShortValue());
         }
 
         return buf;
@@ -300,9 +300,9 @@ public class JsonFileReader implements AutoCloseable, DictionaryProvider {
         final int size = count * IntVector.TYPE_WIDTH;
         ArrowBuf buf = allocator.buffer(size);
 
-        for (int i = 0; i < count; i++) {
+        for (int i = 0, writeIndex = 0; i < count; i++, writeIndex += 4) {
           parser.nextToken();
-          buf.writeInt(parser.getIntValue());
+          buf.writeInt(writeIndex, parser.getIntValue());
         }
 
         return buf;
@@ -315,9 +315,9 @@ public class JsonFileReader implements AutoCloseable, DictionaryProvider {
         final int size = count * BigIntVector.TYPE_WIDTH;
         ArrowBuf buf = allocator.buffer(size);
 
-        for (int i = 0; i < count; i++) {
+        for (int i = 0, writeIndex = 0; i < count; i++, writeIndex += 8) {
           parser.nextToken();
-          buf.writeLong(parser.getLongValue());
+          buf.writeLong(writeIndex, parser.getLongValue());
         }
 
         return buf;
@@ -330,9 +330,9 @@ public class JsonFileReader implements AutoCloseable, DictionaryProvider {
         final int size = count * Float4Vector.TYPE_WIDTH;
         ArrowBuf buf = allocator.buffer(size);
 
-        for (int i = 0; i < count; i++) {
+        for (int i = 0, writeIndex = 0; i < count; i++, writeIndex += 4) {
           parser.nextToken();
-          buf.writeFloat(parser.getFloatValue());
+          buf.writeFloat(writeIndex, parser.getFloatValue());
         }
 
         return buf;
@@ -345,9 +345,9 @@ public class JsonFileReader implements AutoCloseable, DictionaryProvider {
         final int size = count * Float8Vector.TYPE_WIDTH;
         ArrowBuf buf = allocator.buffer(size);
 
-        for (int i = 0; i < count; i++) {
+        for (int i = 0, writeIndex = 0; i < count; i++, writeIndex += 8) {
           parser.nextToken();
-          buf.writeDouble(parser.getDoubleValue());
+          buf.writeDouble(writeIndex, parser.getDoubleValue());
         }
 
         return buf;
@@ -360,13 +360,12 @@ public class JsonFileReader implements AutoCloseable, DictionaryProvider {
         final int size = count * DecimalVector.TYPE_WIDTH;
         ArrowBuf buf = allocator.buffer(size);
 
-        for (int i = 0; i < count; i++) {
+        for (int i = 0, writeIndex = 0; i < count; i++, writeIndex += 16) {
           parser.nextToken();
           BigDecimal decimalValue = new BigDecimal(parser.readValueAs(String.class));
           DecimalUtility.writeBigDecimalToArrowBuf(decimalValue, buf, i);
         }
 
-        buf.writerIndex(size);
         return buf;
       }
     };
@@ -383,8 +382,10 @@ public class JsonFileReader implements AutoCloseable, DictionaryProvider {
 
         int byteWidth = count > 0 ? values.get(0).length : 0;
         ArrowBuf buf = allocator.buffer(byteWidth * count);
+        int index = 0;
         for (byte[] value : values) {
-          buf.writeBytes(value);
+          buf.writeBytes(index, value);
+          index += value.length;
         }
 
         return buf;
@@ -405,9 +406,10 @@ public class JsonFileReader implements AutoCloseable, DictionaryProvider {
         }
 
         ArrowBuf buf = allocator.buffer(bufferSize);
-
+        int index = 0;
         for (byte[] value : values) {
-          buf.writeBytes(value);
+          buf.writeBytes(index, value);
+          index += value.length;
         }
 
         return buf;
@@ -428,9 +430,10 @@ public class JsonFileReader implements AutoCloseable, DictionaryProvider {
         }
 
         ArrowBuf buf = allocator.buffer(bufferSize);
-
+        int index = 0;
         for (byte[] value : values) {
-          buf.writeBytes(value);
+          buf.writeBytes(index, value);
+          index += value.length;
         }
 
         return buf;

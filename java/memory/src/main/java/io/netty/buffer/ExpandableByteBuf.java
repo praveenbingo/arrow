@@ -17,6 +17,7 @@
 
 package io.netty.buffer;
 
+import org.apache.arrow.memory.ArrowBuf;
 import org.apache.arrow.memory.BufferAllocator;
 
 /**
@@ -41,12 +42,14 @@ public class ExpandableByteBuf extends MutableWrappedByteBuf {
   @Override
   public ByteBuf capacity(int newCapacity) {
     if (newCapacity > capacity()) {
-      ByteBuf newBuf = allocator.buffer(newCapacity).asNettyBuffer();
-      newBuf.writeBytes(buffer, 0, buffer.capacity());
-      newBuf.readerIndex(buffer.readerIndex());
-      newBuf.writerIndex(buffer.writerIndex());
-      buffer.release();
-      buffer = newBuf;
+      ArrowBuf buffer = allocator.buffer(newCapacity);
+      ByteBuf newBuf = new NettyArrowBuf(buffer, buffer.getReferenceManager().getAllocator().getAsByteBufAllocator(),
+                                         buffer.capacity());
+      newBuf.writeBytes(this.buffer, 0, this.buffer.capacity());
+      newBuf.readerIndex(this.buffer.readerIndex());
+      newBuf.writerIndex(this.buffer.writerIndex());
+      this.buffer.release();
+      this.buffer = newBuf;
       return newBuf;
     } else {
       return super.capacity(newCapacity);
