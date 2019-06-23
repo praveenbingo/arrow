@@ -160,6 +160,27 @@ char* upper_utf8(int64 context, const char* data, int32 data_len, int32_t* out_l
   return ret;
 }
 
+// Convert a utf8 sequence to upper case.
+// TODO : This handles only ascii characters.
+FORCE_INLINE
+char* castVARCHAR_utf8_int64(int64 context, const char* data, int32 data_len, int64_t out_len, int32_t* out_length) {
+  char* ret = reinterpret_cast<char*>(gdv_fn_context_arena_malloc(context, out_len));
+  // TODO: handle allocation failures
+  int len = data_len <= out_len ? data_len : out_len;
+  for (int32 i = 0; i < len; ++i) {
+    char cur = data[i];
+
+    // 'A- - 'Z' : 0x41 - 0x5a
+    // 'a' - 'z' : 0x61 - 0x7a
+    if (cur >= 0x61 && cur <= 0x7a) {
+      cur = static_cast<char>(cur - 0x20);
+    }
+    ret[i] = cur;
+  }
+  *out_length = len;
+  return ret;
+}
+
 #define IS_NULL(NAME, TYPE) \
   FORCE_INLINE              \
   bool NAME##_##TYPE(TYPE in, int32 len, boolean is_valid) { return !is_valid; }
