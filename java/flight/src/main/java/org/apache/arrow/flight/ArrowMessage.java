@@ -37,6 +37,7 @@ import org.apache.arrow.vector.ipc.message.ArrowBatchMessage;
 import org.apache.arrow.vector.ipc.message.ArrowMessageMetadata;
 import org.apache.arrow.vector.ipc.message.ArrowDictionaryBatch;
 import org.apache.arrow.vector.ipc.message.ArrowRecordBatch;
+import org.apache.arrow.vector.ipc.message.MessageMetadataResult;
 import org.apache.arrow.vector.ipc.message.MessageSerializer;
 import org.apache.arrow.vector.types.pojo.Schema;
 
@@ -117,14 +118,14 @@ class ArrowMessage implements AutoCloseable {
   );
 
   private final FlightDescriptor descriptor;
-  private final ArrowMessageMetadata message;
+  private final MessageMetadataResult message;
   private final ArrowBuf appMetadata;
   private final List<ArrowBuf> bufs;
 
 
   public ArrowMessage(FlightDescriptor descriptor, Schema schema) {
-    ByteBuffer serializedMessage = schema.toSerializedFlatBuffer();
-    this.message = ArrowMessageMetadata.create(serializedMessage.slice());
+    ByteBuffer serializedMessage = MessageSerializer.serializeMetadata(schema);
+    this.message = MessageMetadataResult.create(serializedMessage.slice());
     bufs = ImmutableList.of();
     this.descriptor = descriptor;
     this.appMetadata = null;
@@ -136,17 +137,17 @@ class ArrowMessage implements AutoCloseable {
    * @param appMetadata The app metadata. May be null. Takes ownership of the buffer otherwise.
    */
   public ArrowMessage(ArrowRecordBatch batch, ArrowBuf appMetadata) {
-    ByteBuffer serializedMessage = batch.toSerializedFlatBuffer();
-    this.message = ArrowMessageMetadata.create(serializedMessage.slice());
+    ByteBuffer serializedMessage = MessageSerializer.serializeMetadata(batch);
+    this.message = MessageMetadataResult.create(serializedMessage.slice());
     this.bufs = ImmutableList.copyOf(batch.getBuffers());
     this.descriptor = null;
     this.appMetadata = appMetadata;
   }
 
   public ArrowMessage(ArrowDictionaryBatch batch) {
-    ByteBuffer serializedMessage = batch.toSerializedFlatBuffer();
+    ByteBuffer serializedMessage = MessageSerializer.serializeMetadata(batch);
     serializedMessage = serializedMessage.slice();
-    this.message = ArrowMessageMetadata.create(serializedMessage);
+    this.message = MessageMetadataResult.create(serializedMessage);
     // asInputStream will free the buffers implicitly, so increment the reference count
     batch.getDictionary().getBuffers().forEach(buf -> buf.getReferenceManager().retain());
     this.bufs = ImmutableList.copyOf(batch.getDictionary().getBuffers());
@@ -154,7 +155,7 @@ class ArrowMessage implements AutoCloseable {
     this.appMetadata = null;
   }
 
-  private ArrowMessage(FlightDescriptor descriptor, ArrowMessageMetadata message, ArrowBuf appMetadata,
+  private ArrowMessage(FlightDescriptor descriptor, MessageMetadataResult message, ArrowBuf appMetadata,
                        ArrowBuf buf) {
     this.message = message;
     this.descriptor = descriptor;
@@ -201,7 +202,7 @@ class ArrowMessage implements AutoCloseable {
 
     try {
       FlightDescriptor descriptor = null;
-      ArrowMessageMetadata header = null;
+      MessageMetadataResult header = null;
       ArrowBuf body = null;
       ArrowBuf appMetadata = null;
       while (stream.available() > 0) {
@@ -219,7 +220,7 @@ class ArrowMessage implements AutoCloseable {
             int size = readRawVarint32(stream);
             byte[] bytes = new byte[size];
             ByteStreams.readFully(stream, bytes);
-            header = ArrowMessageMetadata.create(ByteBuffer.wrap(bytes));
+            header = MessageMetadataResult.create(ByteBuffer.wrap(bytes));
             break;
           }
           case APP_METADATA_TAG: {
@@ -263,7 +264,7 @@ class ArrowMessage implements AutoCloseable {
   private InputStream asInputStream(BufferAllocator allocator) {
     try {
 
-      final ByteString bytes = ByteString.copyFrom(message.byteBuffer(),
+      final ByteString bytes = ByteString.copyFrom(message.getMessageBuffer(),
           message.bytesAfterMessage());
 
       if (getMessageType() == HeaderType.SCHEMA) {
